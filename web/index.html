@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sentinel Chess Enterprise</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <div class="animated-bg">
+        <div class="gradient-mesh"></div>
+        <div class="chess-particle" style="left: 5%; animation-duration: 18s; animation-delay: 0s; font-size: 4rem;">♘</div>
+        <div class="chess-particle" style="left: 15%; animation-duration: 25s; animation-delay: 2s; font-size: 7rem;">♜</div>
+        <div class="chess-particle" style="left: 25%; animation-duration: 20s; animation-delay: 5s; font-size: 3rem;">♝</div>
+        <div class="chess-particle" style="left: 35%; animation-duration: 22s; animation-delay: 1s; font-size: 5rem;">♛</div>
+        <div class="chess-particle" style="left: 45%; animation-duration: 19s; animation-delay: 8s; font-size: 4.5rem;">♚</div>
+        <div class="chess-particle" style="left: 55%; animation-duration: 28s; animation-delay: 0s; font-size: 8rem;">♞</div>
+        <div class="chess-particle" style="left: 65%; animation-duration: 21s; animation-delay: 4s; font-size: 3.5rem;">♖</div>
+        <div class="chess-particle" style="left: 75%; animation-duration: 24s; animation-delay: 7s; font-size: 6rem;">♕</div>
+        <div class="chess-particle" style="left: 85%; animation-duration: 17s; animation-delay: 2s; font-size: 4rem;">♗</div>
+        <div class="chess-particle" style="left: 95%; animation-duration: 26s; animation-delay: 1s; font-size: 6.5rem;">♔</div>
+        <div class="chess-particle" style="left: 20%; animation-duration: 23s; animation-delay: 9s; font-size: 3rem;">♟</div>
+        <div class="chess-particle" style="left: 80%; animation-duration: 19s; animation-delay: 6s; font-size: 4.5rem;">♙</div>
+    </div>
+
+    <div id="floatingAlert" class="floating-alert hidden">CHECK!</div>
+    
+    <div id="endgameScreen" class="endgame-overlay hidden">
+        <h1 id="endgameTitle">YOU WON!</h1>
+        <p id="endgameSub">By Checkmate</p>
+        <button id="btnReturnHome" class="action-btn">Return to Home</button>
+    </div>
+
+    <div id="reviewScreen" class="review-overlay hidden">
+        <div class="review-box">
+            <h1 style="color:#58a6ff; margin-bottom: 5px;">Post-Game Analysis</h1>
+            <p style="color:#8b949e; margin-bottom: 15px;">Overall Accuracy</p>
+            <h2 id="reviewAccuracy" style="font-size: 3.5rem; margin-bottom: 20px; color:#3fb950; text-shadow: 0 0 15px rgba(63, 185, 80, 0.4);">85%</h2>
+            
+            <div class="review-stat"><span>Good Moves:</span> <span id="revGood" style="color:#3fb950; font-weight:bold;">0</span></div>
+            <div class="review-stat"><span>Mistakes:</span> <span id="revMistake" style="color:#d29922; font-weight:bold;">0</span></div>
+            <div class="review-stat"><span>Blunders:</span> <span id="revBlunder" style="color:#f85149; font-weight:bold;">0</span></div>
+            
+            <p id="reviewMotivation" style="margin-top: 25px; font-style: italic; color:#c9d1d9; line-height: 1.5;"></p>
+            <button id="btnEndReview" class="action-btn primary cyber-glow" style="margin-top: 25px; width: 100%;">Complete Review</button>
+        </div>
+    </div>
+
+    <nav class="top-nav">
+        <div class="brand pulse-text">Sentinel</div>
+        <div class="nav-links">
+            <button class="nav-btn active" data-target="homePage">Home</button>
+            <button class="nav-btn" data-target="learnPage">Learn</button>
+            <button class="nav-btn" data-target="friendsPage">Friends</button>
+            <button class="nav-btn" data-target="historyPage">History</button>
+        </div>
+    </nav>
+
+    <div id="homePage" class="page-container active-page">
+        <div class="glass-panel text-center hover-glow">
+            <h1>Sentinel Portal</h1>
+            <div class="id-badge">Your ID: <span id="myPlayerId">Loading...</span></div>
+            
+            <div id="timerSelection" class="timer-setup">
+                <h3 style="color:#00c6ff; margin-bottom:10px;">Match Settings</h3>
+                <div class="menu-buttons horizontal">
+                    <button class="action-btn secondary btn-time selected-time" data-time="0">No Timer</button>
+                    <button class="action-btn secondary btn-time" data-time="10">10 Min</button>
+                    <button class="action-btn secondary btn-time" data-time="20">20 Min</button>
+                    <button class="action-btn secondary btn-time" data-time="30">30 Min</button>
+                </div>
+                <div class="custom-timer">
+                    <input type="number" id="customTimeInput" placeholder="Custom Mins" min="1" max="120">
+                </div>
+            </div>
+
+            <div class="menu-buttons" id="primaryMenu">
+                <button id="btnSinglePlayer" class="action-btn primary cyber-glow">Play vs AI</button>
+                <button id="btnPlayFriend" class="action-btn secondary hover-lift">Play vs Friend</button>
+                <button id="btnRandomMatch" class="action-btn secondary hover-lift">Random Match</button>
+            </div>
+            
+            <div id="difficultySelector" class="hidden">
+                <h3 style="margin-bottom:10px;">Select AI Difficulty</h3>
+                <div class="menu-buttons">
+                    <button data-level="1" class="btn-diff action-btn secondary hover-lift">Beginner</button>
+                    <button data-level="3" class="btn-diff action-btn secondary hover-lift">Intermediate</button>
+                    <button data-level="5" class="btn-diff action-btn primary cyber-glow">Grandmaster</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="learnPage" class="page-container hidden">
+        <div class="glass-panel text-center hover-glow">
+            <h2 style="color:#00c6ff;">Academy</h2>
+            
+            <div id="learnOnboardingUI" class="hidden" style="margin-top:20px;">
+                <h3 style="margin-bottom:15px;">Welcome to the Academy</h3>
+                <p style="color:#ccc; margin-bottom: 20px;">To tailor your curriculum, tell us about your experience level:</p>
+                <div class="menu-buttons">
+                    <button class="action-btn secondary btn-track hover-lift" data-track="0">Beginner (New to Chess)</button>
+                    <button class="action-btn secondary btn-track hover-lift" data-track="1">Intermediate (Know the Rules)</button>
+                    <button class="action-btn secondary btn-track hover-lift" data-track="2">Advanced (Want Tactics)</button>
+                </div>
+            </div>
+
+            <div id="learnRecapUI" class="hidden" style="margin-top:20px;">
+                <h3>Welcome Back!</h3>
+                <p style="color:#ccc; margin-bottom: 15px;">You have unlocked the following scenarios. Select one to review.</p>
+                <div id="recapButtons" class="menu-buttons" style="max-height: 200px; overflow-y: auto; padding-right: 5px;"></div>
+                <button id="btnSkipRecap" class="action-btn primary cyber-glow" style="margin-top:20px; width:100%;">Continue Curriculum</button>
+            </div>
+
+            <div id="learnMainUI" style="margin-top:20px;">
+                <h3 id="lessonTitleDisplay" style="margin-bottom:10px; color:#58a6ff;"></h3>
+                <p id="lessonDescription" style="color:#ccc; margin-bottom: 20px; line-height:1.5;"></p>
+                <button id="btnStartLesson" class="action-btn primary cyber-glow" style="width:100%;">Start Scenario</button>
+                <button id="btnResetTrack" class="action-btn secondary hover-lift" style="width:100%; margin-top:10px;">Change Experience Level</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="friendsPage" class="page-container hidden">
+        <div class="glass-panel hover-glow">
+            <h2 style="color:#00c6ff; margin-bottom:10px;">Network</h2>
+            <div class="search-box">
+                <input type="text" id="friendIdInput" placeholder="Friend ID..." maxlength="6">
+                <button id="btnAddFriend" class="action-btn primary">Add</button>
+            </div>
+            <ul id="friendsList" class="data-list"></ul>
+        </div>
+    </div>
+
+    <div id="historyPage" class="page-container hidden">
+        <div class="glass-panel hover-glow">
+            <h2 style="color:#00c6ff; margin-bottom:10px;">Match Archives</h2>
+            <ul id="historyList" class="data-list"></ul>
+        </div>
+    </div>
+
+    <div id="gamePage" class="page-container hidden">
+        <div class="game-header">
+            <div id="opponentInfo" class="player-info">Opponent <span id="timerOpponent" class="timer hidden">10:00</span></div>
+            <div id="analysisBadge" class="analysis-badge hidden">Good Move</div>
+        </div>
+        
+        <div id="learnInstruction" class="hidden" style="background:rgba(0,198,255,0.15); border:1px solid #00c6ff; padding:12px; border-radius:8px; margin-bottom:15px; text-align:center; width:100%; font-weight:bold; box-shadow: 0 0 15px rgba(0, 198, 255, 0.2);"></div>
+
+        <div class="board-wrapper">
+            <div id="chessboard" class="board"></div>
+        </div>
+
+        <div class="game-footer">
+            <div id="myInfo" class="player-info">You <span id="timerMe" class="timer hidden">10:00</span></div>
+            <div class="game-controls">
+                <div id="status">White to Move</div>
+                <button id="btnHint" class="action-btn small hover-lift" style="border: 1px solid #00c6ff;">Hint</button>
+                <button id="btnResign" class="action-btn small danger hover-lift">Resign</button>
+                <button id="btnNextReplay" class="action-btn small primary cyber-glow hidden">Next Move >></button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
