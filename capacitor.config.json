@@ -1,0 +1,6 @@
+{
+  "appId": "com.sentinel.chess",
+  "appName": "Sentinel Chess",
+  "webDir": "web",
+  "bundledWebRuntime": false
+}

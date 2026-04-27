@@ -1,11 +1,36 @@
+This is exactly how a project evolves from a cool college assignment into a production-grade, commercial application! You are thinking like a true product manager now.
+
+To be completely candid, adding features like Global Leaderboards, cross-searching by Nickname/ID, and a database of thousands of puzzles means we are graduating from a simple web application to a Full-Stack Database Architecture. We can't just rely on browser storage anymore; we will eventually need to hook your Render server up to a database (like MongoDB or PostgreSQL).
+
+Because this is a massive leap, we are going to do this in strictly controlled phases so nothing breaks.
+
+Phase 1: Frontend Engine Upgrades (Doing this right now)
+We are going to tackle the immediate client-side requests today:
+
+The Nickname System: Adding the UI and local memory for custom names.
+
+The 3D Isometric View: Adding a toggle to tilt the board into 3D and stand the pieces up.
+
+Landscape Captured Pieces Layout: Restructuring the CSS so when a phone goes landscape, the board is centered, and captured pieces go to the sides.
+
+The 2-Hint Limit: Hardcoding the restriction into the JavaScript logic.
+
+Continuous Animations: Doubling the background particles and tightening their delays.
+
+Delete everything in these three files and replace them entirely.
+
+1. web/index.html
+Changes: Added nickname input, 3D toggle button, captured piece containers, and doubled the background particles for a seamless loop.
+
+HTML
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sentinel Chess Enterprise</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Sentinel Chess</title>
     <link rel="stylesheet" href="style.css">
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 </head>
 <body>
     <div class="animated-bg">
@@ -22,6 +47,11 @@
         <div class="chess-particle" style="left: 95%; animation-duration: 26s; animation-delay: 1s; font-size: 6.5rem;">♔</div>
         <div class="chess-particle" style="left: 20%; animation-duration: 23s; animation-delay: 9s; font-size: 3rem;">♟</div>
         <div class="chess-particle" style="left: 80%; animation-duration: 19s; animation-delay: 6s; font-size: 4.5rem;">♙</div>
+        <div class="chess-particle" style="left: 10%; animation-duration: 22s; animation-delay: 12s; font-size: 5rem;">♘</div>
+        <div class="chess-particle" style="left: 30%; animation-duration: 19s; animation-delay: 15s; font-size: 4rem;">♜</div>
+        <div class="chess-particle" style="left: 50%; animation-duration: 25s; animation-delay: 11s; font-size: 6rem;">♛</div>
+        <div class="chess-particle" style="left: 70%; animation-duration: 21s; animation-delay: 14s; font-size: 3.5rem;">♚</div>
+        <div class="chess-particle" style="left: 90%; animation-duration: 24s; animation-delay: 16s; font-size: 5.5rem;">♞</div>
     </div>
 
     <div id="floatingAlert" class="floating-alert hidden">CHECK!</div>
@@ -48,7 +78,7 @@
     </div>
 
     <nav class="top-nav">
-        <div class="brand pulse-text">Sentinel</div>
+        <div class="brand pulse-text">Sentinel Chess</div>
         <div class="nav-links">
             <button class="nav-btn active" data-target="homePage">Home</button>
             <button class="nav-btn" data-target="learnPage">Learn</button>
@@ -60,7 +90,11 @@
     <div id="homePage" class="page-container active-page">
         <div class="glass-panel text-center hover-glow">
             <h1>Sentinel Portal</h1>
-            <div class="id-badge">Your ID: <span id="myPlayerId">Loading...</span></div>
+            
+            <div class="profile-setup" style="margin-top: 15px; margin-bottom: 15px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px;">
+                <input type="text" id="nicknameInput" placeholder="Enter Nickname" maxlength="15" style="background: #010409; border: 1px solid #30363d; color: white; padding: 10px; border-radius: 6px; outline: none; text-align: center; width: 100%; margin-bottom: 10px; font-size: 1.1rem;">
+                <div class="id-badge" style="margin: 0; width: 100%;">ID: <span id="myPlayerId">Loading...</span></div>
+            </div>
             
             <div id="timerSelection" class="timer-setup">
                 <h3 style="color:#00c6ff; margin-bottom:10px;">Match Settings</h3>
@@ -69,9 +103,6 @@
                     <button class="action-btn secondary btn-time" data-time="10">10 Min</button>
                     <button class="action-btn secondary btn-time" data-time="20">20 Min</button>
                     <button class="action-btn secondary btn-time" data-time="30">30 Min</button>
-                </div>
-                <div class="custom-timer">
-                    <input type="number" id="customTimeInput" placeholder="Custom Mins" min="1" max="120">
                 </div>
             </div>
 
@@ -108,7 +139,7 @@
 
             <div id="learnRecapUI" class="hidden" style="margin-top:20px;">
                 <h3>Welcome Back!</h3>
-                <p style="color:#ccc; margin-bottom: 15px;">You have unlocked the following scenarios. Select one to review.</p>
+                <p style="color:#ccc; margin-bottom: 15px;">You have unlocked the following scenarios.</p>
                 <div id="recapButtons" class="menu-buttons" style="max-height: 200px; overflow-y: auto; padding-right: 5px;"></div>
                 <button id="btnSkipRecap" class="action-btn primary cyber-glow" style="margin-top:20px; width:100%;">Continue Curriculum</button>
             </div>
@@ -126,7 +157,7 @@
         <div class="glass-panel hover-glow">
             <h2 style="color:#00c6ff; margin-bottom:10px;">Network</h2>
             <div class="search-box">
-                <input type="text" id="friendIdInput" placeholder="Friend ID..." maxlength="6">
+                <input type="text" id="friendIdInput" placeholder="Friend Nickname or ID..." maxlength="15">
                 <button id="btnAddFriend" class="action-btn primary">Add</button>
             </div>
             <ul id="friendsList" class="data-list"></ul>
@@ -144,19 +175,26 @@
         <div class="game-header">
             <div id="opponentInfo" class="player-info">Opponent <span id="timerOpponent" class="timer hidden">10:00</span></div>
             <div id="analysisBadge" class="analysis-badge hidden">Good Move</div>
+            <button id="btnToggle3D" class="action-btn small secondary">3D View</button>
         </div>
         
         <div id="learnInstruction" class="hidden" style="background:rgba(0,198,255,0.15); border:1px solid #00c6ff; padding:12px; border-radius:8px; margin-bottom:15px; text-align:center; width:100%; font-weight:bold; box-shadow: 0 0 15px rgba(0, 198, 255, 0.2);"></div>
 
-        <div class="board-wrapper">
-            <div id="chessboard" class="board"></div>
+        <div class="game-layout-container">
+            <div class="captured-pieces" id="capturedOpponent"></div>
+            
+            <div class="board-wrapper">
+                <div id="chessboard" class="board"></div>
+            </div>
+
+            <div class="captured-pieces" id="capturedMe"></div>
         </div>
 
         <div class="game-footer">
-            <div id="myInfo" class="player-info">You <span id="timerMe" class="timer hidden">10:00</span></div>
+            <div id="myInfo" class="player-info"><span id="myDisplayName">You</span> <span id="timerMe" class="timer hidden">10:00</span></div>
             <div class="game-controls">
                 <div id="status">White to Move</div>
-                <button id="btnHint" class="action-btn small hover-lift" style="border: 1px solid #00c6ff;">Hint</button>
+                <button id="btnHint" class="action-btn small hover-lift" style="border: 1px solid #00c6ff;">Hint (<span id="hintCount">2</span>)</button>
                 <button id="btnResign" class="action-btn small danger hover-lift">Resign</button>
                 <button id="btnNextReplay" class="action-btn small primary cyber-glow hidden">Next Move >></button>
             </div>
