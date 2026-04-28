@@ -51,15 +51,37 @@ body { background-color: #090c10; color: #c9d1d9; height: 100vh; overflow-x: hid
 .controls-row { display: flex; gap: 10px; align-items: center;}
 
 .game-view-container { display: flex; flex-direction: column; width: 100%; align-items: center;}
-.board-wrapper { width: 100%; padding: 20px 0; display: flex; justify-content: center; perspective: 1000px; }
+.board-wrapper { width: 100%; padding: 20px 0; display: flex; justify-content: center; perspective: 1200px; }
 .board { display: grid; grid-template-columns: repeat(8, 1fr); width: 100%; max-width: 450px; aspect-ratio: 1 / 1; border: 4px solid #30363d; border-radius: 4px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); overflow: hidden; transform-style: preserve-3d; transition: 0.5s;}
 
-/* Isometric Hack */
-.board-3d { transform: rotateX(55deg) rotateZ(-40deg); box-shadow: -15px 25px 0px #111418, 0 30px 60px rgba(0,0,0,0.9); }
-.board-3d .light { background-color: #f0d9b5; }
-.board-3d .dark { background-color: #b58863; }
+/* Core Board Square Setup - CRITICAL FIX: preserve-3d prevents pancake effect */
+.square { position: relative; display: flex; justify-content: center; align-items: center; cursor: pointer; width: 100%; height: 100%; transform-style: preserve-3d; }
+.light { background-color: #f0d9b5; } .dark { background-color: #b58863; }
+.selected { background-color: rgba(0, 198, 255, 0.4) !important; }
+.last-move { background-color: rgba(255, 255, 0, 0.3) !important; }
+.hint-dot::after { content: ''; width: 25%; height: 25%; background: rgba(0, 0, 0, 0.3); border-radius: 50%; position: absolute; pointer-events: none; }
+.hint-capture::after { content: ''; width: 80%; height: 80%; border: 4px solid rgba(0, 0, 0, 0.3); border-radius: 50%; position: absolute; pointer-events: none; }
+
+/* The Piece Images */
+.piece-img { position: absolute; width: 85%; height: 85%; pointer-events: none; z-index: 2; transition: transform 0.3s ease; }
+
+/* ---------------------------------------------------------------------- */
+/* 3D Isometric Hack - Properly un-rotating the pieces so they stand tall */
+/* ---------------------------------------------------------------------- */
+.board-3d { 
+    transform: rotateX(55deg) rotateZ(-40deg); 
+    box-shadow: -15px 25px 0px #111418, 0 30px 60px rgba(0,0,0,0.9); 
+    overflow: visible; /* Prevent pieces from getting cut off at the edges */
+}
 .board-3d .square { border: 1px solid rgba(255,255,255,0.05); }
-.board-3d .piece-img { transform: rotateZ(40deg) rotateX(-55deg) translateY(-20px) scale(1.4); filter: drop-shadow(10px 20px 5px rgba(0,0,0,0.7)); }
+
+/* The magic fix: Inverse rotation, bottom anchor, and Z-translation */
+.board-3d .piece-img { 
+    transform-origin: bottom center;
+    transform: translateZ(10px) rotateZ(40deg) rotateX(-55deg) scale(1.6); 
+    filter: drop-shadow(-5px 15px 8px rgba(0,0,0,0.7)); 
+}
+/* ---------------------------------------------------------------------- */
 
 /* Landscape Configuration */
 @media screen and (orientation: landscape) and (max-height: 500px) {
@@ -74,11 +96,3 @@ body { background-color: #090c10; color: #c9d1d9; height: 100vh; overflow-x: hid
 .captured-table h4 { color: #ccc; margin-bottom: 10px; font-size: 0.9rem; border-bottom: 1px solid #30363d; padding-bottom: 5px;}
 .captured-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px;}
 .captured-grid img { width: 100%; height: auto; opacity: 0.8;}
-
-.square { position: relative; display: flex; justify-content: center; align-items: center; cursor: pointer; width: 100%; height: 100%; }
-.light { background-color: #f0d9b5; } .dark { background-color: #b58863; }
-.selected { background-color: rgba(0, 198, 255, 0.4) !important; }
-.last-move { background-color: rgba(255, 255, 0, 0.3) !important; }
-.hint-dot::after { content: ''; width: 25%; height: 25%; background: rgba(0, 0, 0, 0.3); border-radius: 50%; position: absolute; pointer-events: none; }
-.hint-capture::after { content: ''; width: 80%; height: 80%; border: 4px solid rgba(0, 0, 0, 0.3); border-radius: 50%; position: absolute; pointer-events: none; }
-.piece-img { position: absolute; width: 85%; height: 85%; pointer-events: none; z-index: 2; transition: transform 0.3s ease; }
