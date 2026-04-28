@@ -81,14 +81,12 @@ async function init() {
 }
 
 function setupEventListeners() {
-    // SECURITY UPGRADE: Don't save locally until the server approves it
     UI.nickInput.addEventListener('change', (e) => {
         socket.emit('update_profile', { id: myId, name: e.target.value });
     });
 
     socket.on('profile_error', (msg) => {
         alert(msg);
-        // Revert to the last safe name
         UI.nickInput.value = myNickname; 
     });
 
@@ -96,8 +94,22 @@ function setupEventListeners() {
         myNickname = approvedName;
         localStorage.setItem('sentinel_nick_secure', myNickname);
         UI.myDisplayName.innerText = myNickname;
-        UI.nickInput.style.borderColor = "#3fb950"; // Flash green for success
+        UI.nickInput.style.borderColor = "#3fb950"; 
         setTimeout(() => UI.nickInput.style.borderColor = "#30363d", 1000);
+    });
+
+    socket.on('leaderboard_data', (players) => {
+        const list = document.getElementById('leaderboardList');
+        list.innerHTML = '';
+        players.forEach((p, i) => {
+            const li = document.createElement('li');
+            li.innerHTML = `<span>#${i+1} <b>${p.nickname || p.id}</b></span><span style="color:#3fb950; font-weight:bold;">${p.elo} ELO</span>`;
+            list.appendChild(li);
+        });
+    });
+
+    document.querySelector('[data-target="leaderboardPage"]').addEventListener('click', () => {
+        socket.emit('get_leaderboard');
     });
 
     document.querySelectorAll('.nav-btn').forEach(btn => btn.addEventListener('click', (e) => {
