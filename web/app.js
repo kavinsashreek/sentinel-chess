@@ -143,7 +143,18 @@ function setupEventListeners() {
     });
 }
 
-function showPage(pageId) { document.querySelectorAll('.page-container').forEach(p => p.classList.add('hidden', 'active-page')); document.getElementById(pageId).classList.remove('hidden'); document.getElementById(pageId).classList.add('active-page'); }
+// ----------------------------------------------------------------------
+// THE CRITICAL FIX: Properly hiding and showing individual pages
+// ----------------------------------------------------------------------
+function showPage(pageId) { 
+    document.querySelectorAll('.page-container').forEach(p => {
+        p.classList.add('hidden');
+        p.classList.remove('active-page');
+    }); 
+    document.getElementById(pageId).classList.remove('hidden'); 
+    document.getElementById(pageId).classList.add('active-page'); 
+}
+// ----------------------------------------------------------------------
 
 function renderLearnTab() {
     if (learnProgress >= LESSONS.length) { document.getElementById('lessonTitleDisplay').innerText = "Curriculum Complete!"; document.getElementById('btnStartLesson').classList.add('hidden'); } 
